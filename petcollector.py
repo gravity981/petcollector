@@ -5,6 +5,7 @@
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_distance_ir import BrickletDistanceIR
 from tinkerforge.bricklet_dual_button import BrickletDualButton
+from tinkerforge.bricklet_dual_relay import BrickletDualRelay
 from resettabletimer import ResettableTimer
 import sys
 
@@ -20,7 +21,7 @@ objCount = 0
 ipcon = IPConnection()  # Create IP connection
 dir = BrickletDistanceIR(UID, ipcon)  # Create device object
 db = BrickletDualButton(UID_dual_button, ipcon)
-
+m_relay = BrickletDualRelay(UID_dual_relay, ipcon)  # Create device object
 
 def timeout():
     global isObjectPresent
@@ -41,6 +42,7 @@ def dummy_callback(param):
     if not isObjectPresent:
         timer.start()
         objCount += 1
+        m_relay.set_monoflop(1, True, 20)
         print("object in, count: " + str(objCount))
         isObjectPresent = True
         db.set_led_state(BrickletDualButton.LED_STATE_ON , BrickletDualButton.LED_STATE_ON )
@@ -48,15 +50,17 @@ def dummy_callback(param):
 
 def main():
     print("connect to tinkerforge deamon")
+
     sys.stdout.flush()
     ipcon.connect(HOST, PORT)  # Connect to brickd
     # Don't use device before ipcon is connected
 
-    #dir.set_debounce_period(100)
+    m_relay.set_state(False, False)
+    dir.set_debounce_period(100)
 
     # distance in mm
-    #dir.set_distance_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 300, 0)
-    #dir.register_callback(BrickletDistanceIR.CALLBACK_DISTANCE_REACHED, dummy_callback)
+    dir.set_distance_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 150, 0)
+    dir.register_callback(BrickletDistanceIR.CALLBACK_DISTANCE_REACHED, dummy_callback)
 
     # distance analog
     # dir.set_analog_value_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 100, 0)
@@ -66,9 +70,7 @@ def main():
     # distance = dir.get_distance()
     # print("Distance: " + str(distance/10.0) + " cm")
 
-    #input("Press key to exit\n")  # Use raw_input() in Python 2
-    #sleep(3)
-
+    input("Press key to exit\n")  # Use raw_input() in Python 2
     ipcon.disconnect()
 
 
