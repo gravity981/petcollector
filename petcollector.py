@@ -85,9 +85,15 @@ def main():
         print('connection to backend established')
         display.write_line(3, 0, 'connected to backend')
 
-    @sio.event
+    @sio.on('login_info')
     def login_info(data):
-        print('message received with ', data)
+        print('user logged in ', data)
+        display.write_line(1, 0, str(data))
+        print(str(db.get_led_state()))
+
+    @sio.on('logout_info')
+    def logout_info(data):
+        print('user logged out ', data)
         display.write_line(1, 0, str(data))
         print(str(db.get_led_state()))
 
