@@ -3,6 +3,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import requests
 import base64
+import json
 
 
 class Watcher:
@@ -41,10 +42,14 @@ class Handler(FileSystemEventHandler):
             print("Received modified event - %s." % event.src_path)
 
             with open(event.src_path, "rb") as image_file:
-                encoded_string = base64.b64encode(image_file.read())
-                pload = {'machine_id': 'Olivia', 'image': encoded_string}
-                r = requests.post('https://httpbin.org/post', data=pload)
-                print(r.text)
+                base64_encoded_image= base64.b64encode(image_file.read())
+                base64_message = base64_encoded_image.decode('ascii')
+                data = dict()
+                data['machine_id'] = 'Olivia'
+                data['image'] = base64_message
+                print(data)
+                r = requests.post('https://shrouded-inlet-73857.herokuapp.com/pint', json=data)
+                print("Response: HTTP " + str(r.status_code))
 
 
 if __name__ == '__main__':
