@@ -5,6 +5,7 @@ from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_distance_ir import BrickletDistanceIR
 from tinkerforge.bricklet_dual_button import BrickletDualButton
 from tinkerforge.bricklet_dual_relay import BrickletDualRelay
+from tinkerforge.bricklet_lcd_128x64 import BrickletLCD128x64
 from resettabletimer import ResettableTimer
 from subprocess import check_output
 import os
@@ -12,12 +13,14 @@ import sys
 import signal
 import pygame
 import time
+import socketio
 
 HOST = "localhost"
 PORT = 4223
 UID = "xpN"  # UID of Distance IR Bricklet
 UID_dual_button = "mMX"
 UID_dual_relay = "E8x"
+UID_lcd = "yqA"
 
 isObjectPresent = False
 objCount = 0
@@ -26,6 +29,7 @@ ipcon = IPConnection()  # Create IP connection
 dir = BrickletDistanceIR(UID, ipcon)  # Create device object
 db = BrickletDualButton(UID_dual_button, ipcon)
 m_relay = BrickletDualRelay(UID_dual_relay, ipcon)  # Create device object
+lcd = BrickletLCD128x64(UID_lcd, ipcon)
 pygame.mixer.init(44100, -16, 2, 1024)
 sound = pygame.mixer.Sound('laser.wav')
 
@@ -39,7 +43,7 @@ def timeout():
         db.set_led_state(BrickletDualButton.LED_STATE_OFF,BrickletDualButton.LED_STATE_OFF)
 
 
-timer = ResettableTimer(0.1, timeout)
+timer = ResettableTimer(0.5, timeout)
 
 
 def dummy_callback(param):
@@ -69,7 +73,22 @@ def main():
     # distance in mm
     dir.set_distance_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 150, 0)
     dir.register_callback(BrickletDistanceIR.CALLBACK_DISTANCE_REACHED, dummy_callback)
+    sio = socketio.Client()
 
+    @sio.event
+    def connect():
+        print('connection established')
+
+    @sio.event
+    def my_message(data):
+        print('message received with ', data)
+        lcd.write_line(1, 0, str(data))
+
+    @sio.event
+    def disconnect():
+        print('disconnected from server')
+
+    sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
     # keep application running
     try:
         while True:
