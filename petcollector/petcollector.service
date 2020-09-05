@@ -1,0 +1,11 @@
+[Unit]
+Description=PetCollector
+After=network.target raspicamera.service
+
+[Service]
+ExecStart=/home/pi/petcollector/petcollector/petcollector.sh
+User=pi
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=CameraService
+After=network.target
+
+[Service]
+ExecStart=/home/pi/petcollector/camera/cameraservice.sh
+User=pi
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

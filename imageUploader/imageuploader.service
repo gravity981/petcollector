@@ -1,0 +1,11 @@
+[Unit]
+Description=ImageUploader
+After=network.target
+
+[Service]
+ExecStart=/home/pi/petcollector/imageUploader/imageuploader.sh
+User=pi
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
