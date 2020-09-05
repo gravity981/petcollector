@@ -7,10 +7,8 @@ from tinkerforge.bricklet_dual_button import BrickletDualButton
 from tinkerforge.bricklet_dual_relay import BrickletDualRelay
 from tinkerforge.bricklet_oled_128x64 import BrickletOLED128x64
 from resettabletimer import ResettableTimer
-from subprocess import check_output
 import os
 import sys
-import signal
 import pygame
 import time
 import socketio
@@ -35,7 +33,7 @@ sound = pygame.mixer.Sound('laser.wav')
 backend_connected = False
 user_logged_in = False
 user_name = ""
-
+last_object = ""
 
 
 def timeout():
@@ -54,12 +52,15 @@ def updateDisplay():
     global backend_connected
     global user_logged_in
     global user_name
+    global last_object
+    global objCount
     display.clear_display()
     display.write_line(0, 0, "PINT - Pet Collector")
     if user_logged_in:
         display.write_line(2, 0, "User " + str(user_name) + " logged in")
     else:
         display.write_line(2, 0, "Please Scan QR Code")
+    display.write_line(5, 0, last_object)
     display.write_line(7, 0, "Object Count: " + str(objCount))
 
 
@@ -67,6 +68,7 @@ def dummy_callback(param):
     global isObjectPresent
     global objCount
     global backend_connected
+    global last_object
     timer.reset()
     if not isObjectPresent:
         sound.play()
@@ -77,6 +79,8 @@ def dummy_callback(param):
         isObjectPresent = True
         db.set_led_state(not isObjectPresent, not backend_connected)
         os.system("pkill -USR1 raspistill")
+        last_object = "..."
+        display.write_line(5, 0, last_object + "                  ")
         display.write_line(7, 0, "Object Count: " + str(objCount))
 
 
@@ -121,9 +125,7 @@ def main():
         print('user logged in ', data)
         user_logged_in = True
         user_name = data['UserID']
-        print(str(db.get_led_state()))
         updateDisplay()
-
 
     @sio.on('logout_info')
     def logout_info(data):
@@ -132,8 +134,17 @@ def main():
         print('user logged out ', data)
         user_logged_in = False
         user_name = ""
-        print(str(db.get_led_state()))
         updateDisplay()
+
+    @sio.on('bottle inserted')
+    def bottle_inserted(data):
+        global last_object
+        last_object = data['matches']
+        # print('object analyzed ', data)
+        last_object = data['matches'][0]['description']
+        print('object analyzed', last_object)
+        display.write_line(5, 0, "                     ")
+        display.write_line(5, 0, last_object)
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
     # keep application running
