@@ -133,8 +133,8 @@ def main():
         print('object analyzed', last_object)
         display.write_line(5, 0, "                         ")
         display.write_line(5, 0, last_object)
-        #if last_object == 'Objekt nicht erkannt':
-        denied_sound.play()
+        if data['bottle'] == '0':
+            denied_sound.play()
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
     # keep application running
