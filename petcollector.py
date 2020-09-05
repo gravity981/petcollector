@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_distance_ir import BrickletDistanceIR
 from tinkerforge.bricklet_dual_button import BrickletDualButton
 from tinkerforge.bricklet_dual_relay import BrickletDualRelay
 from resettabletimer import ResettableTimer
 import sys
+import pygame
+from multiprocessing import Pool
 
 HOST = "localhost"
 PORT = 4223
@@ -22,6 +23,9 @@ ipcon = IPConnection()  # Create IP connection
 dir = BrickletDistanceIR(UID, ipcon)  # Create device object
 db = BrickletDualButton(UID_dual_button, ipcon)
 m_relay = BrickletDualRelay(UID_dual_relay, ipcon)  # Create device object
+pygame.mixer.init(44100, -16, 2, 1024)
+sound = pygame.mixer.Sound('laser.wav')
+
 
 def timeout():
     global isObjectPresent
@@ -40,6 +44,7 @@ def dummy_callback(param):
     global objCount
     timer.reset()
     if not isObjectPresent:
+        sound.play()
         timer.start()
         objCount += 1
         m_relay.set_monoflop(1, True, 20)
