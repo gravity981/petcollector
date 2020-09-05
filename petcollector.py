@@ -60,7 +60,7 @@ def dummy_callback(param):
 
 def getRaspistillPID():
     global m_raspistillPID
-    m_raspistillPID = check_output(["pidof","raspistill"])
+    m_raspistillPID = int(check_output(["pidof","raspistill"]))
 
 def main():
     print("connect to tinkerforge deamon")
