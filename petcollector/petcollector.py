@@ -48,22 +48,6 @@ def timeout():
 timer = ResettableTimer(0.5, timeout)
 
 
-def updateDisplay():
-    global backend_connected
-    global user_logged_in
-    global user_name
-    global last_object
-    global objCount
-    display.clear_display()
-    display.write_line(0, 0, "PINT - Pet Collector")
-    if user_logged_in:
-        display.write_line(2, 0, "User " + str(user_name) + " logged in")
-    else:
-        display.write_line(2, 0, "Please Scan QR Code")
-    display.write_line(5, 0, last_object)
-    display.write_line(7, 0, "Object Count: " + str(objCount))
-
-
 def dummy_callback(param):
     global isObjectPresent
     global objCount
@@ -90,7 +74,10 @@ def main():
     sys.stdout.flush()
     ipcon.connect(HOST, PORT)  # Connect to brickd
     # Don't use device before ipcon is connected
-    updateDisplay()
+    display.clear_display()
+    display.write_line(0, 0, "PINT - Pet Collector")
+    display.write_line(2, 0, "Please Scan QR Code")
+    display.write_line(7, 0, "Object Count: " + str(objCount))
 
     m_relay.set_state(False, False)
     dir.set_debounce_period(400)
@@ -106,7 +93,6 @@ def main():
         global backend_connected
         print('connection to backend established')
         backend_connected = True
-        updateDisplay()
         db.set_led_state(not isObjectPresent, not backend_connected)
 
     @sio.event
@@ -115,7 +101,6 @@ def main():
         global backend_connected
         print('disconnected from server')
         backend_connected = False
-        updateDisplay()
         db.set_led_state(not isObjectPresent, not backend_connected)
 
     @sio.on('login_info')
@@ -125,7 +110,8 @@ def main():
         print('user logged in ', data)
         user_logged_in = True
         user_name = data['UserID']
-        updateDisplay()
+        display.write_line(2, 0, "                       ")
+        display.write_line(2, 0, "User " + str(user_name) + " logged in")
 
     @sio.on('logout_info')
     def logout_info(data):
@@ -134,7 +120,8 @@ def main():
         print('user logged out ', data)
         user_logged_in = False
         user_name = ""
-        updateDisplay()
+        display.write_line(2, 0, "                         ")
+        display.write_line(2, 0, "Please Scan QR Code")
 
     @sio.on('bottle inserted')
     def bottle_inserted(data):
@@ -143,7 +130,7 @@ def main():
         # print('object analyzed ', data)
         last_object = data['matches'][0]['description']
         print('object analyzed', last_object)
-        display.write_line(5, 0, "                     ")
+        display.write_line(5, 0, "                         ")
         display.write_line(5, 0, last_object)
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
