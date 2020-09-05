@@ -30,6 +30,7 @@ m_relay = BrickletDualRelay(UID_dual_relay, ipcon)  # Create device object
 display = BrickletOLED128x64(UID_oled, ipcon)
 pygame.mixer.init(44100, -16, 2, 1024)
 sound = pygame.mixer.Sound('laser.wav')
+denied_sound = pygame.mixer.Sound('denied.wav')
 backend_connected = False
 user_logged_in = False
 user_name = ""
@@ -132,6 +133,8 @@ def main():
         print('object analyzed', last_object)
         display.write_line(5, 0, "                         ")
         display.write_line(5, 0, last_object)
+        #if last_object == 'Objekt nicht erkannt':
+        denied_sound.play()
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
     # keep application running
