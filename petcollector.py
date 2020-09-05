@@ -40,7 +40,7 @@ def timeout():
     if isObjectPresent:
         print("object out")
         isObjectPresent = False
-        db.set_led_state(BrickletDualButton.LED_STATE_OFF,BrickletDualButton.LED_STATE_OFF)
+        db.set_led_state(BrickletDualButton.LED_STATE_OFF, BrickletDualButton.LED_STATE_OFF)
 
 
 timer = ResettableTimer(0.5, timeout)
@@ -57,7 +57,7 @@ def dummy_callback(param):
         m_relay.set_monoflop(1, True, 200)
         print("object in, count: " + str(objCount))
         isObjectPresent = True
-        db.set_led_state(BrickletDualButton.LED_STATE_ON , BrickletDualButton.LED_STATE_ON )
+        db.set_led_state(BrickletDualButton.LED_STATE_ON, BrickletDualButton.LED_STATE_ON )
         os.system("pkill -USR1 raspistill")
 
 def main():
@@ -77,12 +77,13 @@ def main():
 
     @sio.event
     def connect():
-        print('connection established')
+        print('connection to backend established')
 
     @sio.event
-    def my_message(data):
+    def login_info(data):
         print('message received with ', data)
         lcd.write_line(1, 0, str(data))
+        print(str(db.get_led_state()))
 
     @sio.event
     def disconnect():
