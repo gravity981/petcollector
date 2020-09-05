@@ -128,12 +128,12 @@ def main():
     def bottle_inserted(data):
         global last_object
         last_object = data['matches']
-        # print('object analyzed ', data)
+        # print('raw data ', data)
         last_object = data['matches'][0]['description']
         print('object analyzed', last_object)
         display.write_line(5, 0, "                         ")
         display.write_line(5, 0, last_object)
-        if data['bottle'] == '0':
+        if data['bottle'] == 0:
             denied_sound.play()
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
