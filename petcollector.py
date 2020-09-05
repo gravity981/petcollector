@@ -26,7 +26,6 @@ ipcon = IPConnection()  # Create IP connection
 dir = BrickletDistanceIR(UID, ipcon)  # Create device object
 db = BrickletDualButton(UID_dual_button, ipcon)
 m_relay = BrickletDualRelay(UID_dual_relay, ipcon)  # Create device object
-m_raspistillPID = 0    #raspistill process id needed to send a camera trigger event
 pygame.mixer.init(44100, -16, 2, 1024)
 sound = pygame.mixer.Sound('laser.wav')
 
@@ -46,7 +45,6 @@ timer = ResettableTimer(0.1, timeout)
 def dummy_callback(param):
     global isObjectPresent
     global objCount
-    global m_raspistillPID
     timer.reset()
     if not isObjectPresent:
         sound.play()
@@ -56,16 +54,10 @@ def dummy_callback(param):
         print("object in, count: " + str(objCount))
         isObjectPresent = True
         db.set_led_state(BrickletDualButton.LED_STATE_ON , BrickletDualButton.LED_STATE_ON )
-        os.kill(m_raspistillPID, signal.SIGUSR1)
-
-def getRaspistillPID():
-    global m_raspistillPID
-    m_raspistillPID = int(check_output(["pidof","raspistill"]))
+        os.system("pkill -USR1 raspistill")
 
 def main():
     print("connect to tinkerforge deamon")
-    getRaspistillPID()
-    print("Raspistill PID:" + str(m_raspistillPID))
 
     sys.stdout.flush()
     ipcon.connect(HOST, PORT)  # Connect to brickd
