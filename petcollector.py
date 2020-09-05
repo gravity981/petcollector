@@ -72,7 +72,7 @@ def main():
     # Don't use device before ipcon is connected
 
     m_relay.set_state(False, False)
-    dir.set_debounce_period(100)
+    dir.set_debounce_period(500)
 
     # distance in mm
     dir.set_distance_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 150, 0)
