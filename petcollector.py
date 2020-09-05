@@ -32,6 +32,10 @@ m_relay = BrickletDualRelay(UID_dual_relay, ipcon)  # Create device object
 display = BrickletOLED128x64(UID_oled, ipcon)
 pygame.mixer.init(44100, -16, 2, 1024)
 sound = pygame.mixer.Sound('laser.wav')
+backend_connected = False
+user_logged_in = False
+user_name = ""
+
 
 
 def timeout():
@@ -40,15 +44,29 @@ def timeout():
     if isObjectPresent:
         print("object out")
         isObjectPresent = False
-        db.set_led_state(BrickletDualButton.LED_STATE_OFF, BrickletDualButton.LED_STATE_OFF)
+        db.set_led_state(not isObjectPresent, not backend_connected)
 
 
 timer = ResettableTimer(0.5, timeout)
 
 
+def updateDisplay():
+    global backend_connected
+    global user_logged_in
+    global user_name
+    display.clear_display()
+    display.write_line(0, 0, "PINT - Pet Collector")
+    if user_logged_in:
+        display.write_line(2, 0, "User " + str(user_name) + " logged in")
+    else:
+        display.write_line(2, 0, "Please Scan QR Code")
+    display.write_line(7, 0, "Object Count: " + str(objCount))
+
+
 def dummy_callback(param):
     global isObjectPresent
     global objCount
+    global backend_connected
     timer.reset()
     if not isObjectPresent:
         sound.play()
@@ -57,9 +75,9 @@ def dummy_callback(param):
         m_relay.set_monoflop(1, True, 200)
         print("object in, count: " + str(objCount))
         isObjectPresent = True
-        db.set_led_state(BrickletDualButton.LED_STATE_ON, BrickletDualButton.LED_STATE_ON )
+        db.set_led_state(not isObjectPresent, not backend_connected)
         os.system("pkill -USR1 raspistill")
-        display.write_line(5, 0, "Object Count: " + str(objCount))
+        display.write_line(7, 0, "Object Count: " + str(objCount))
 
 
 def main():
@@ -68,12 +86,10 @@ def main():
     sys.stdout.flush()
     ipcon.connect(HOST, PORT)  # Connect to brickd
     # Don't use device before ipcon is connected
-    display.write_line(3, 0, 'disconnected from backend')
-    display.write_line(4, 0, 'connected to tinkerforge')
-    display.write_line(5, 0, "Object Count: " + str(objCount))
+    updateDisplay()
 
     m_relay.set_state(False, False)
-    dir.set_debounce_period(500)
+    dir.set_debounce_period(400)
 
     # distance in mm
     dir.set_distance_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 150, 0)
@@ -82,25 +98,42 @@ def main():
 
     @sio.event
     def connect():
+        global isObjectPresent
+        global backend_connected
         print('connection to backend established')
-        display.write_line(3, 0, 'connected to backend')
-
-    @sio.on('login_info')
-    def login_info(data):
-        print('user logged in ', data)
-        display.write_line(1, 0, str(data))
-        print(str(db.get_led_state()))
-
-    @sio.on('logout_info')
-    def logout_info(data):
-        print('user logged out ', data)
-        display.write_line(1, 0, str(data))
-        print(str(db.get_led_state()))
+        backend_connected = True
+        updateDisplay()
+        db.set_led_state(not isObjectPresent, not backend_connected)
 
     @sio.event
     def disconnect():
+        global isObjectPresent
+        global backend_connected
         print('disconnected from server')
-        display.write_line(3, 0, 'disconnected from backend')
+        backend_connected = False
+        updateDisplay()
+        db.set_led_state(not isObjectPresent, not backend_connected)
+
+    @sio.on('login_info')
+    def login_info(data):
+        global user_logged_in
+        global user_name
+        print('user logged in ', data)
+        user_logged_in = True
+        user_name = data['UserID']
+        print(str(db.get_led_state()))
+        updateDisplay()
+
+
+    @sio.on('logout_info')
+    def logout_info(data):
+        global user_logged_in
+        global user_name
+        print('user logged out ', data)
+        user_logged_in = False
+        user_name = ""
+        print(str(db.get_led_state()))
+        updateDisplay()
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
     # keep application running
