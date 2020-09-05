@@ -135,11 +135,8 @@ def main():
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
     # keep application running
-    try:
-        while True:
-            time.sleep(10)
-    except:
-        ipcon.disconnect()
+    sio.wait()
+    ipcon.disconnect()
 
 
 main()
