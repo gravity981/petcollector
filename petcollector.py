@@ -46,6 +46,7 @@ timer = ResettableTimer(0.1, timeout)
 def dummy_callback(param):
     global isObjectPresent
     global objCount
+    global m_raspistillPID
     timer.reset()
     if not isObjectPresent:
         sound.play()
