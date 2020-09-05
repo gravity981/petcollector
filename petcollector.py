@@ -52,7 +52,7 @@ def dummy_callback(param):
         sound.play()
         timer.start()
         objCount += 1
-        m_relay.set_monoflop(1, True, 20)
+        m_relay.set_monoflop(1, True, 200)
         print("object in, count: " + str(objCount))
         isObjectPresent = True
         db.set_led_state(BrickletDualButton.LED_STATE_ON , BrickletDualButton.LED_STATE_ON )
