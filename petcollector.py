@@ -8,7 +8,7 @@ from tinkerforge.bricklet_dual_relay import BrickletDualRelay
 from resettabletimer import ResettableTimer
 import sys
 import pygame
-from multiprocessing import Pool
+import time
 
 HOST = "localhost"
 PORT = 4223
@@ -67,16 +67,12 @@ def main():
     dir.set_distance_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 150, 0)
     dir.register_callback(BrickletDistanceIR.CALLBACK_DISTANCE_REACHED, dummy_callback)
 
-    # distance analog
-    # dir.set_analog_value_callback_threshold(BrickletDistanceIR.THRESHOLD_OPTION_SMALLER, 100, 0)
-    # dir.register_callback(BrickletDistanceIR.CALLBACK_ANALOG_VALUE_REACHED, dummy_callback)
-
-    # Get current distance
-    # distance = dir.get_distance()
-    # print("Distance: " + str(distance/10.0) + " cm")
-
-    input("Press key to exit\n")  # Use raw_input() in Python 2
-    ipcon.disconnect()
+    # keep application running
+    try:
+        while True:
+            time.sleep(10)
+    except:
+        ipcon.disconnect()
 
 
 main()
