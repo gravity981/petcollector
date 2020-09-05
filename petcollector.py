@@ -5,7 +5,7 @@ from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_distance_ir import BrickletDistanceIR
 from tinkerforge.bricklet_dual_button import BrickletDualButton
 from tinkerforge.bricklet_dual_relay import BrickletDualRelay
-from tinkerforge.bricklet_lcd_128x64 import BrickletLCD128x64
+from tinkerforge.bricklet_oled_128x64 import BrickletOLED128x64
 from resettabletimer import ResettableTimer
 from subprocess import check_output
 import os
@@ -20,7 +20,7 @@ PORT = 4223
 UID = "xpN"  # UID of Distance IR Bricklet
 UID_dual_button = "mMX"
 UID_dual_relay = "E8x"
-UID_lcd = "yqA"
+UID_oled = "yqA"
 
 isObjectPresent = False
 objCount = 0
@@ -29,7 +29,7 @@ ipcon = IPConnection()  # Create IP connection
 dir = BrickletDistanceIR(UID, ipcon)  # Create device object
 db = BrickletDualButton(UID_dual_button, ipcon)
 m_relay = BrickletDualRelay(UID_dual_relay, ipcon)  # Create device object
-lcd = BrickletLCD128x64(UID_lcd, ipcon)
+display = BrickletOLED128x64(UID_oled, ipcon)
 pygame.mixer.init(44100, -16, 2, 1024)
 sound = pygame.mixer.Sound('laser.wav')
 
@@ -59,6 +59,8 @@ def dummy_callback(param):
         isObjectPresent = True
         db.set_led_state(BrickletDualButton.LED_STATE_ON, BrickletDualButton.LED_STATE_ON )
         os.system("pkill -USR1 raspistill")
+        display.write_line(5, 0, "Object Count: " + str(objCount))
+
 
 def main():
     print("connect to tinkerforge deamon")
@@ -66,6 +68,9 @@ def main():
     sys.stdout.flush()
     ipcon.connect(HOST, PORT)  # Connect to brickd
     # Don't use device before ipcon is connected
+    display.write_line(3, 0, 'disconnected from backend')
+    display.write_line(4, 0, 'connected to tinkerforge')
+    display.write_line(5, 0, "Object Count: " + str(objCount))
 
     m_relay.set_state(False, False)
     dir.set_debounce_period(500)
@@ -78,16 +83,18 @@ def main():
     @sio.event
     def connect():
         print('connection to backend established')
+        display.write_line(3, 0, 'connected to backend')
 
     @sio.event
     def login_info(data):
         print('message received with ', data)
-        lcd.write_line(1, 0, str(data))
+        display.write_line(1, 0, str(data))
         print(str(db.get_led_state()))
 
     @sio.event
     def disconnect():
         print('disconnected from server')
+        display.write_line(3, 0, 'disconnected from backend')
 
     sio.connect('wss://shrouded-inlet-73857.herokuapp.com/')
     # keep application running
